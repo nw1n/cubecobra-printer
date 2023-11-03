@@ -1,0 +1,66 @@
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+_vendor
+
+# Output files
+*.exe
+*.test
+*.prof
+*.out
+
+# Log files
+*.log
+
+# Binary files
+*.bin
+
+# Object files, used by the linker
+*.syso
+
+# Go binary
+bin/
+
+# Go test cache
+.test_cache/
+
+# Ignore system and text editor files
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Ignore Go package files
+# These are the Go files that specify the package's build details and dependencies.
+# They are not needed in a repository since they can be generated automatically.
+vendor/
+Godeps/
+
+# Compiled Go files
+*.test
+
+# Ignore cache and temporary files
+*.cache
+
+# Ignore test output
+_test
+
+# csv files
+*.csv
+
+# executables
+main
+cubecobraprinter
+cubecobraprinter_linux_amd64
+cubecobraprinter_windows_amd64.exe
+cubecobraprinter_darwin_amd64
+
+# tmp
+tmp/
+cubecobra-printer-data/
+bin-out
