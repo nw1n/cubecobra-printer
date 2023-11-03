@@ -1,8 +1,6 @@
-# This is the Go Version of my Python Cube Creator
+# Cubecobra Printer
 
-## Cubecobra Printer
-
-Create a pdf from a public MTG cube from cubecobra.com
+Create a pdf from a MTG cube from cubecobra.com
 
 ## Commands
 
@@ -10,7 +8,7 @@ Run app:
 
 `go run .`
 
-Run app without interaction for development:
+Run app without interaction (for testing only):
 
 `go run . -dev`
 
