@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/fatih/color"
 )
 
 func CreateFolderIfNotExisting(folderPath string) error {
@@ -82,23 +83,12 @@ func getCsvWithUniqueRows(csvData[][]string) [][]string {
 	return uniqueRows
 }
 
-func PrintColorLn(msg string, color string) {
-	reset := "\033[0m"
-	colorCode := reset
-
-	cRed := "\033[31m"
-	cGreen := "\033[32m"
-	cYellow := "\033[33m"
-
-	if color == "red" {
-		colorCode = cRed
-	} else if color == "green" {
-		colorCode = cGreen
-	} else if color == "yellow" {
-		colorCode = cYellow
+func PrintColorLn(msg string, colorStr string) {
+	if colorStr == "red" {
+		color.Red(msg)
+	} else if colorStr == "green" {
+		color.Green(msg)
+	} else if colorStr == "yellow" {
+		color.Yellow(msg)
 	}
-
-
-
-	fmt.Println(colorCode + msg + reset)
 }
