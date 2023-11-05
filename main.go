@@ -80,7 +80,7 @@ func runMainInteractive() {
 	fmt.Println(utils.GetAsciiArtMainTitle())
 	time.Sleep(200 * time.Millisecond)
 
-	fmt.Println("Welcome to the Cube Creator!")
+	fmt.Println("Welcome to the Cubecobra Printer!")
 	fmt.Println("")
 
 	reader := bufio.NewReader(os.Stdin)
