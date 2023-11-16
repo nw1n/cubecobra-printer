@@ -209,7 +209,8 @@ func (c *Card) IsFlipFileOnDisk() bool {
 }
 
 func (c *Card) GetId() string {
-	return c.NameOfSet + "-" + c.CollectorNumber
+	idStr := c.NameOfSet + "-" + c.CollectorNumber
+	return RemoveNonASCIIChars(idStr)
 }
 
 func (c *Card) GetHyphenatedName() string {

@@ -1,22 +1,21 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 
 	"github.com/jung-kurt/gofpdf"
 
 	"image"
 	"image/color"
+	"image/draw"
 	"image/jpeg"
 	"image/png"
 	"strings"
 
-	"golang.org/x/image/draw"
+	"github.com/disintegration/imaging"
 )
 
 func copyFolder(src, dst string) error {
@@ -59,6 +58,34 @@ func copyDir(src, dst string) error {
 	return nil
 }
 
+func drawBlackTriangle(img draw.Image, colorVal color.Color, x1, y1, x2, y2 int) {
+		// Set the fill color to black
+		black := colorVal
+
+		// Define the vertices of the triangle
+		p1 := image.Point{x1, y1}
+		p2 := image.Point{x2, y1}
+		p3 := image.Point{(x1 + x2) / 2, y2}
+
+		// Draw the triangle on the image
+		draw.Draw(img, image.Rectangle{p1, p2}, &image.Uniform{black}, image.Point{}, draw.Over)
+		draw.Draw(img, image.Rectangle{p2, p3}, &image.Uniform{black}, image.Point{}, draw.Over)
+		draw.Draw(img, image.Rectangle{p3, p1}, &image.Uniform{black}, image.Point{}, draw.Over)
+}
+
+func saveImage(img image.Image, filename string) {
+	file, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	err = png.Encode(file, img)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func copyFile(src, dst string) error {
 	sourceFile, err := os.ReadFile(src)
 	if err != nil {
@@ -67,74 +94,6 @@ func copyFile(src, dst string) error {
 	err = os.WriteFile(dst, sourceFile, 0644)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func trimBorders(borderedImagesFolder string, borderSize int) error {
-	dir := borderedImagesFolder
-	out := dir
-
-	fillColor := color.RGBA{24, 21, 16, 255} // #181510 in RGB
-
-	fmt.Println("folder:", dir)
-
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if !info.IsDir() && (strings.HasSuffix(info.Name(), ".png") || strings.HasSuffix(info.Name(), ".jpg")) {
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-
-			var img image.Image
-			if strings.HasSuffix(info.Name(), ".png") {
-				img, err = png.Decode(file)
-			} else if strings.HasSuffix(info.Name(), ".jpg") {
-				img, err = jpeg.Decode(file)
-			}
-			if err != nil {
-				return err
-			}
-
-			originalBounds := img.Bounds()
-			newBounds := image.Rect(0, 0, originalBounds.Dx()-2*borderSize, originalBounds.Dy()-2*borderSize)
-			dst := image.NewRGBA(newBounds)
-
-			// Fill the new image with the background color
-			draw.Draw(dst, dst.Bounds(), &image.Uniform{fillColor}, image.ZP, draw.Src)
-
-			// Copy the image content, excluding the original border
-			draw.Draw(dst, newBounds, img, image.Pt(borderSize, borderSize), draw.Src)
-
-			// Saving the image
-			outFile, err := os.Create(filepath.Join(out, info.Name()))
-			if err != nil {
-				return err
-			}
-			defer outFile.Close()
-
-			if strings.HasSuffix(info.Name(), ".png") {
-				err = png.Encode(outFile, dst)
-			} else if strings.HasSuffix(info.Name(), ".jpg") {
-				err = jpeg.Encode(outFile, dst, nil)
-			}
-			if err != nil {
-				return err
-			}
-
-			fmt.Println("Processed and saved image:", path)
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		fmt.Println(err)
 	}
 	return nil
 }
@@ -212,45 +171,140 @@ func addBorders(srcImagesFolder string, borderSize int) error {
 	return nil
 }
 
-func SortMapByValue(inputMap map[string]int) map[string]int {
-	keys := make([]string, 0, len(inputMap))
-	values := make([]int, 0, len(inputMap))
+// TriangleMask creates a triangle mask with a specified base and height.
+func TriangleMask(base, height int) *image.Alpha {
+	mask := image.NewAlpha(image.Rect(0, 0, base, height))
 
-	for key, value := range inputMap {
-		keys = append(keys, key)
-		values = append(values, value)
+	for y := 0; y < height; y++ {
+		xEnd := base - y
+
+		for x := 0; x < xEnd; x++ {
+			mask.SetAlpha(x, y, color.Alpha{255})
+		}
 	}
 
-	sort.Slice(keys, func(i, j int) bool {
-		return values[i] < values[j]
-	})
-
-	sortedMap := make(map[string]int)
-	for _, key := range keys {
-		sortedMap[key] = inputMap[key]
-	}
-
-	return sortedMap
+	return mask
 }
 
-func saveMapToJSON(inputMap map[string]int, filename string) error {
-	println("Saving map to JSON file:", filename)
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+// rotate90 rotates the given mask 90 degrees counterclockwise.
+func rotate90(mask *image.Alpha) *image.Alpha {
+	bounds := mask.Bounds()
+	rotated := image.NewAlpha(image.Rect(0, 0, bounds.Dy(), bounds.Dx()))
 
-	jsonData, err := json.Marshal(inputMap)
-	if err != nil {
-		return err
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			rotated.SetAlpha(y, bounds.Max.X-x-1, mask.AlphaAt(x, y))
+		}
 	}
 
-	_, err = file.Write(jsonData)
-	if err != nil {
-		return err
-	}
+	return rotated
+}
 
+// rotate180 rotates the given mask 180 degrees counterclockwise.
+func rotate180(mask *image.Alpha) *image.Alpha {
+	return rotate90(rotate90(mask))
+}
+
+// rotate270 rotates the given mask 270 degrees counterclockwise.
+func rotate270(mask *image.Alpha) *image.Alpha {
+	return rotate90(rotate90(rotate90(mask)))
+}
+
+
+
+func addImageCorners(borderedImagesFolder string) error {
+	dir := borderedImagesFolder
+	out := dir
+
+	// borderColor := color.RGBA{0, 0, 255, 255}
+	borderColor := color.RGBA{24, 21, 16, 255} // Border color #181510 in RGB
+
+	fmt.Println("folder:", dir)
+
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && (strings.HasSuffix(info.Name(), ".png") || strings.HasSuffix(info.Name(), ".jpg")) {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			var img image.Image
+			if strings.HasSuffix(info.Name(), ".png") {
+				img, err = png.Decode(file)
+			} else if strings.HasSuffix(info.Name(), ".jpg") {
+				img, err = jpeg.Decode(file)
+			}
+			if err != nil {
+				return err
+			}
+
+			originalBounds := img.Bounds()
+
+			// Calculate new dimensions including the border
+			newWidth := originalBounds.Dx()
+			newHeight := originalBounds.Dy()
+
+			// Create a new image with borders
+			finalImage := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+
+			// draw the original image
+			draw.Draw(finalImage, image.Rect(0, 0, newWidth, newHeight), img, originalBounds.Min, draw.Src)
+
+			triangleBase := 31
+			triangleHeight := 31
+		
+			// Create triangle masks for each corner
+			topLeftMask := TriangleMask(triangleBase, triangleHeight)
+			topRightMask := TriangleMask(triangleBase, triangleHeight)
+			bottomLeftMask := TriangleMask(triangleBase, triangleHeight)
+			bottomRightMask := TriangleMask(triangleBase, triangleHeight)
+		
+			// Rotate masks for top-right and bottom-right corners
+			topRightMask = rotate90(topRightMask)
+			bottomLeftMask = rotate270(bottomLeftMask)
+			bottomRightMask = rotate180(bottomRightMask)
+		
+			draw.DrawMask(finalImage, finalImage.Bounds(), image.NewUniform(borderColor), image.Point{}, topLeftMask, image.Point{}, draw.Over)
+			rotatedImage := imaging.Rotate90(finalImage)
+			draw.DrawMask(rotatedImage, finalImage.Bounds(), image.NewUniform(borderColor), image.Point{}, topLeftMask, image.Point{}, draw.Over)
+			rotatedImage = imaging.Rotate90(rotatedImage)
+			draw.DrawMask(rotatedImage, finalImage.Bounds(), image.NewUniform(borderColor), image.Point{}, topLeftMask, image.Point{}, draw.Over)
+			rotatedImage = imaging.Rotate90(rotatedImage)
+			draw.DrawMask(rotatedImage, finalImage.Bounds(), image.NewUniform(borderColor), image.Point{}, topLeftMask, image.Point{}, draw.Over)
+			rotatedImage = imaging.Rotate90(rotatedImage)
+
+			finalImageX := rotatedImage	
+
+			// Save the image with corners
+			outFile, err := os.Create(filepath.Join(out, info.Name()))
+			if err != nil {
+				return err
+			}
+			defer outFile.Close()
+
+			if strings.HasSuffix(info.Name(), ".png") {
+				err = png.Encode(outFile, finalImageX)
+			} else if strings.HasSuffix(info.Name(), ".jpg") {
+				err = jpeg.Encode(outFile, finalImageX, nil)
+			}
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("Processed and saved image:", path)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
 	return nil
 }
 
@@ -267,6 +321,9 @@ func createPDF(directory, output string, cards []Card) error {
 		return err
 	}
 
+	width := 280.00000
+	height := 384.00000
+
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	for _, entry := range dir {
@@ -275,8 +332,20 @@ func createPDF(directory, output string, cards []Card) error {
 
 			imagePath := filepath.Join(directory, fileName)
 
-			pdf.AddPage()
-			pdf.Image(imagePath, 0, 0, 210, 297, false, "", 0, "")
+			pdf.AddPageFormat("P", gofpdf.SizeType{Wd: width, Ht: height})
+			// Set the layout function for A4 page size
+			pdf.SetAutoPageBreak(true, 0)
+			pdf.SetMargins(0, 0, 0)
+			pdf.SetFillColor(24, 21, 16) // Set RGB color for black
+			pdf.Rect(0, 0, width, height, "F") // Rectangle covering the entire A4 page
+
+			//pdf.Image(imagePath, 0, 0, 210, 297, false, "", 0, "")
+
+			// Replace "your_image.jpg" with the path to your image file
+			imageFile := imagePath
+
+			// Embed the image in the PDF at its original dimensions
+			pdf.Image(imageFile, 0, 0, width, height, false, "", 0, "")
 		}
 	}
 
@@ -371,14 +440,14 @@ func ProcessImagesToPdf(srcImagesFolder, borderedImagesFolder, finalPdfPath stri
 		return err
 	}
 
-	err = trimBorders(borderedImagesFolder, borderSize)
+	err = addImageCorners(borderedImagesFolder)
 	if err != nil {
 		PrintColorLn("ERROR!", "red")
-		fmt.Println("Error drawing borders:", err)
+		fmt.Println("Error drawing corners:", err)
 		return err
 	}
 
-	err = addBorders(borderedImagesFolder, borderSize * 2)
+	err = addBorders(borderedImagesFolder, borderSize)
 	if err != nil {
 		PrintColorLn("ERROR!", "red")
 		fmt.Println("Error drawing borders:", err)

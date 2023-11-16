@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode"
+
+	"github.com/fatih/color"
 )
 
 func CreateFolderIfNotExisting(folderPath string) error {
@@ -48,25 +51,21 @@ func GetCubecobraCsvUrl(inputStr string) string {
 
 func GetAsciiArtMainTitle() string {
 	return `
-  ______             __                                              
- /      \           /  |                                             
-/$$$$$$  | __    __ $$ |____    ______                               
-$$ |  $$/ /  |  /  |$$      \  /      \                              
-$$ |      $$ |  $$ |$$$$$$$  |/$$$$$$  |                             
-$$ |   __ $$ |  $$ |$$ |  $$ |$$    $$ |                             
-$$ \__/  |$$ \__$$ |$$ |__$$ |$$$$$$$$/                              
-$$    $$/ $$    $$/ $$    $$/ $$       |                             
- $$$$$$/   $$$$$$/  $$$$$$$/   $$$$$$$/                              
-  ______                                  __                         
- /      \                                /  |                        
-/$$$$$$  |  ______   ______    ______   _$$ |_     ______    ______  
-$$ |  $$/  /      \ /      \  /      \ / $$   |   /      \  /      \ 
-$$ |      /$$$$$$  /$$$$$$  | $$$$$$  |$$$$$$/   /$$$$$$  |/$$$$$$  |
-$$ |   __ $$ |  $$/$$    $$ | /    $$ |  $$ | __ $$ |  $$ |$$ |  $$/ 
-$$ \__/  |$$ |     $$$$$$$$/ /$$$$$$$ |  $$ |/  |$$ \__$$ |$$ |      
-$$    $$/ $$ |     $$       |$$    $$ |  $$  $$/ $$    $$/ $$ |      
- $$$$$$/  $$/       $$$$$$$/  $$$$$$$/    $$$$/   $$$$$$/  $$/                                                
 
+██████╗██╗   ██╗██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ██████╗  █████╗ 
+██╔════╝██║   ██║██╔══██╗██╔════╝██╔════╝██╔═══██╗██╔══██╗██╔══██╗██╔══██╗
+██║     ██║   ██║██████╔╝█████╗  ██║     ██║   ██║██████╔╝██████╔╝███████║
+██║     ██║   ██║██╔══██╗██╔══╝  ██║     ██║   ██║██╔══██╗██╔══██╗██╔══██║
+╚██████╗╚██████╔╝██████╔╝███████╗╚██████╗╚██████╔╝██████╔╝██║  ██║██║  ██║
+ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝
+																																					
+██████╗ ██████╗ ██╗███╗   ██╗████████╗███████╗██████╗                     
+██╔══██╗██╔══██╗██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗                    
+██████╔╝██████╔╝██║██╔██╗ ██║   ██║   █████╗  ██████╔╝                    
+██╔═══╝ ██╔══██╗██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗                    
+██║     ██║  ██║██║██║ ╚████║   ██║   ███████╗██║  ██║                    
+╚═╝     ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝                    
+																																																												
 `
 }
 
@@ -82,23 +81,24 @@ func getCsvWithUniqueRows(csvData[][]string) [][]string {
 	return uniqueRows
 }
 
-func PrintColorLn(msg string, color string) {
-	reset := "\033[0m"
-	colorCode := reset
+func PrintColorLn(msg string, colorStr string) {
+	if colorStr == "red" {
+		color.Red(msg)
+	} else if colorStr == "green" {
+		color.Green(msg)
+	} else if colorStr == "yellow" {
+		color.Yellow(msg)
+	}
+}
 
-	cRed := "\033[31m"
-	cGreen := "\033[32m"
-	cYellow := "\033[33m"
+func RemoveNonASCIIChars(s string) string {
+	var result []rune
 
-	if color == "red" {
-		colorCode = cRed
-	} else if color == "green" {
-		colorCode = cGreen
-	} else if color == "yellow" {
-		colorCode = cYellow
+	for _, char := range s {
+		if unicode.Is(unicode.ASCII_Hex_Digit, char) {
+			result = append(result, char)
+		}
 	}
 
-
-
-	fmt.Println(colorCode + msg + reset)
+	return string(result)
 }

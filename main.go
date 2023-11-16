@@ -33,13 +33,16 @@ const (
 	CSV_NON_SINGLETON_FLIP  = "https://cubecobra.com/cube/overview/non-singleton-flip"
 	CSV_WIZARDS_CUBE_URL = "https://cubecobra.com/cube/list/3xfe3"
 	CSV_MEGA_TEST_URL = "https://cubecobra.com/cube/list/mega-test"
+	CSV_TINY_PEA_CUBE_URL = "https://cubecobra.com/cube/list/thetinypea" // singleton 180 cards
+	CSV_REALISTIC_SIMPLE_URL = "https://cubecobra.com/cube/list/ed4473bb-54b7-455d-aa9b-d0b082b8047d" // singleton 20 cards
+
 )
 
 func runMainWithoutInput() {
 	isPdfMode := true
 	isDiffMode := false
 	diffCsv := ""
-	csvUrl := CSV_MEGA_TEST_URL
+	csvUrl := CSV_REALISTIC_SIMPLE_URL
 	diffCsvUrl := CSV_FLIP_DIFF_EXAMPLE_URL
 
 	csvUrl = utils.GetCubeIdFromUrl(csvUrl)
@@ -80,7 +83,7 @@ func runMainInteractive() {
 	fmt.Println(utils.GetAsciiArtMainTitle())
 	time.Sleep(200 * time.Millisecond)
 
-	fmt.Println("Welcome to the Cube Creator!")
+	fmt.Println("Welcome to the Cubecobra Printer!")
 	fmt.Println("")
 
 	reader := bufio.NewReader(os.Stdin)
