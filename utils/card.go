@@ -251,12 +251,12 @@ func CreateAllCards(csvData [][]string, imageBasePath string, flipImageBasePath 
 		var cardsUnique []Card
 		var cardsUniqueMap = make(map[string]bool)
 		for _, card := range cards {
-			if _, value := cardsUniqueMap[card.Title]; !value {
-				cardsUniqueMap[card.Title] = true
+			if _, value := cardsUniqueMap[card.GetId()]; !value {
+				cardsUniqueMap[card.GetId()] = true
 				cardsUnique = append(cardsUnique, card)
 			} else {
 				for i, cardUnique := range cardsUnique {
-					if cardUnique.Title == card.Title {
+					if cardUnique.GetId() == card.GetId() {
 						cardsUnique[i].Amount++
 					}
 				}
