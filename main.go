@@ -42,7 +42,7 @@ func runMainWithoutInput() {
 	isPdfMode := true
 	isDiffMode := false
 	diffCsv := ""
-	csvUrl := CSV_REALISTIC_SIMPLE_URL
+	csvUrl := CSV_SIMPLE_EXAMPLE_URL
 	diffCsvUrl := CSV_FLIP_DIFF_EXAMPLE_URL
 
 	csvUrl = utils.GetCubeIdFromUrl(csvUrl)

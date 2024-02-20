@@ -95,7 +95,8 @@ func RemoveNonASCIIChars(s string) string {
 	var result []rune
 
 	for _, char := range s {
-		if unicode.Is(unicode.ASCII_Hex_Digit, char) {
+		// only add ASCII characters
+		if char < unicode.MaxASCII {
 			result = append(result, char)
 		}
 	}
