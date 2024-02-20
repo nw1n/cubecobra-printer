@@ -210,8 +210,6 @@ func (c *Card) IsFlipFileOnDisk() bool {
 
 func (c *Card) GetId() string {
 	idStr := RemoveNonASCIIChars(c.NameOfSet) + "-" +  RemoveNonASCIIChars(c.CollectorNumber)
-	// log the idStr
-	fmt.Println(idStr)
 	return idStr
 }
 
