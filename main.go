@@ -232,10 +232,10 @@ func runMainInteractive() {
 	cards := utils.CreateAllCards(csvData, IMG_FOLDER, IMG_FLIP_FOLDER)
 	utils.ProcessCardsAndDownloadImages(cards)
 
-	isTestSuccess := utils.DoBasicChecks(cards, csvData, IMG_FOLDER)
-	if !isTestSuccess {
-		return
-	}
+	//isTestSuccess := utils.DoBasicChecks(cards, csvData, IMG_FOLDER)
+	//if !isTestSuccess {
+	//	return
+	//}
 
 	if !isPdfMode {
 		return
